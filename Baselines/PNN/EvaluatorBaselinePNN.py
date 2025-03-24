@@ -65,7 +65,7 @@ class NetPNN(SaveableNNModule):
 
     def get_activations_for_rnn(self, x_list_tensor):
 
-        x_list = torch.split(x_list_tensor, split_size=1, dim=1)
+        x_list = torch.split(x_list_tensor, split_size_or_sections=1, dim=1)
         x_list = [torch.squeeze(ii, dim=1) for ii in x_list]
 
         if self.num_prev_models > 0:

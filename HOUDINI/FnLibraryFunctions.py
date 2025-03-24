@@ -21,7 +21,7 @@ def split(x):
     if type(x) == tuple:
         x = x[1]
 
-    x_list = torch.split(x, split_size=1, dim=1)
+    x_list = torch.split(x, split_size_or_sections=1, dim=1)
     x_list = [torch.squeeze(ii, dim=1) for ii in x_list]
 
     return x_list

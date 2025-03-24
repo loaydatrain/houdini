@@ -203,7 +203,7 @@ class DataProvider(object):
                 for c_index, c_class in enumerate(classes):
                     classes_dict[c_class] = c_index
 
-        labels = np.zeros((0,), np.int)
+        labels = np.zeros((0,), int)
         img_dim = self.get_image_size()
         img_ch = self.get_image_channels_num()
 
@@ -216,7 +216,7 @@ class DataProvider(object):
             if image_label_int in classes:
                 dp = np.vstack((dp, val))
                 label_to_use = image_label_int if not remap_classes else classes_dict[image_label_int]
-                labels = np.hstack((labels, np.ones((val.shape[0],), np.int) * label_to_use))
+                labels = np.hstack((labels, np.ones((val.shape[0],), int) * label_to_use))
 
         labels = labels.reshape((-1, 1))
         self.shuffle_in_unison(dp, labels, c=None)
@@ -227,7 +227,7 @@ class DataProvider(object):
 
     def get_images_for_regression(self, image_dictionary, class_value_dict):
         """
-        Returns regression labels. instead of labels = ([batch_size,], np.int], it's (batch_size, 1), np.float32)
+        Returns regression labels. instead of labels = ([batch_size,], int], it's (batch_size, 1), np.float32)
         :param image_dictionary:
         :param class_value_dict: {class_idx : value}
         :return:
@@ -370,7 +370,7 @@ class DataProvider(object):
         self.shuffle_in_unison(batch_datapoints, batch_count_labels, None)
 
         batch_count_labels = np.reshape(batch_count_labels, [-1, 1])
-        batch_count_labels_int = batch_count_labels.astype(np.int)
+        batch_count_labels_int = batch_count_labels.astype(int)
         batch_count_labels_float = batch_count_labels.astype(np.float32)
         # batch_count_labels_one_hot = to_one_of_k(batch_count_labels, count_up_to + 1)
 

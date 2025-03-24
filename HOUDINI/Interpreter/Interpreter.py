@@ -150,12 +150,12 @@ class Interpreter:
                 num_outputs_per_data_point = 1
                 for d in range(1, y_pred_output.shape.__len__()):
                     num_outputs_per_data_point *= y_pred_output.shape[d]
-                torch_mse = F.mse_loss(y_pred_output, y, size_average=False)
-                mse += (torch_mse.cpu().data.numpy()[0] / float(num_outputs_per_data_point))
+                torch_mse = F.mse_loss(y_pred_output, y, reduction='sum')
+                mse += (torch_mse.cpu().data.numpy() / float(num_outputs_per_data_point))
 
             if output_type == ProgramOutputType.INTEGER or output_type == ProgramOutputType.SIGMOID:
-                y_pred_int = y_pred_output.data.cpu().numpy().round().astype(np.int)
-                y_int = y.data.cpu().numpy().round().astype(np.int)
+                y_pred_int = y_pred_output.data.cpu().numpy().round().astype(np.int32)
+                y_int = y.data.cpu().numpy().round().astype(np.int32)
                 c_num_matching_datapoints += (y_pred_int == y_int).astype(np.float32).sum()
             else:
                 # y_pred_output_np = y_pred_output.data.cpu().numpy()

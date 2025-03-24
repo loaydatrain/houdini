@@ -35,7 +35,7 @@ class NetPNN(SaveableNNModule):
         # CNN Layer 2
         if self.num_prev_models > 0:
             self.scalar_2 = nn.Parameter(torch.from_numpy(np.ones(1, dtype=np.float32)))
-            self.V_2 = nn.Conv2d(self.layer_sizes[0]*self.num_prev_models, self.layer_sizes[0], kernel_size=1)
+            self.V_2 = nn.Conv2d(self.layer_sizes[0] * self.num_prev_models, self.layer_sizes[0], kernel_size=1)
             self.U_2 = nn.Conv2d(self.layer_sizes[0], self.layer_sizes[1], kernel_size=5, bias=False)
 
         self.conv2 = nn.Conv2d(self.layer_sizes[0], self.layer_sizes[1], kernel_size=5)
@@ -44,10 +44,10 @@ class NetPNN(SaveableNNModule):
         self.conv2_drop = nn.Dropout2d()
 
         # FC Layer 1
-        self.fc1_input_dim = self.pool2_output_dim**2*self.layer_sizes[1]
+        self.fc1_input_dim = self.pool2_output_dim ** 2 * self.layer_sizes[1]
         if self.num_prev_models > 0:
             self.scalar_3 = nn.Parameter(torch.from_numpy(np.ones(1, dtype=np.float32)))
-            self.V_3 = nn.Conv2d(self.layer_sizes[1]*self.num_prev_models, self.layer_sizes[1], kernel_size=1)
+            self.V_3 = nn.Conv2d(self.layer_sizes[1] * self.num_prev_models, self.layer_sizes[1], kernel_size=1)
             self.U_3 = nn.Linear(self.fc1_input_dim, self.layer_sizes[2], bias=False)
 
         self.fc1 = nn.Linear(self.fc1_input_dim, self.layer_sizes[2])
@@ -62,12 +62,12 @@ class NetPNN(SaveableNNModule):
             self.fc2 = nn.Linear(self.layer_sizes[2], output_dim)
 
     def cnn_get_output_dim(self, w1, kernel_size, stride, padding=0):
-        w2 = (w1 - kernel_size + 2*padding) // stride + 1
+        w2 = (w1 - kernel_size + 2 * padding) // stride + 1
         return w2
 
     def get_activations_for_rnn(self, x_list_tensor):
 
-        x_list = torch.split(x_list_tensor, split_size=1, dim=1)
+        x_list = torch.split(x_list_tensor, split_size_or_sections=1, dim=1)
         x_list = [torch.squeeze(ii, dim=1) for ii in x_list]
 
         if self.num_prev_models > 0:
@@ -116,12 +116,12 @@ class NetPNN(SaveableNNModule):
         activations.append(activation1)
 
         # CNN Layer 2:
-        #main_column's logits:
+        # main_column's logits:
         mcl2 = self.conv2(activation1)
         if self.num_prev_models > 0:
             # d = [m[0] for m in prev_activations]
             anterior_features = torch.cat([m[0] for m in prev_activations], 1)
-            projection = F.relu(self.V_2(self.scalar_2*anterior_features))
+            projection = F.relu(self.V_2(self.scalar_2 * anterior_features))
             mcl2 += self.U_2(projection)
 
         activation2 = F.relu(F.max_pool2d(self.conv2_drop(mcl2), 2))
@@ -173,7 +173,7 @@ class NetPNN_RNN(SaveableNNModule):
             # print(past_models.__len__())
             past_models = past_models[-7:]
             # print(past_models.__len__())
-        
+
         self.name = name
         self.output_dim = output_dim
         self.output_activation = output_activation
@@ -192,7 +192,7 @@ class NetPNN_RNN(SaveableNNModule):
             self.scalar_5 = nn.Parameter(torch.from_numpy(np.ones(1, dtype=np.float32)))
             self.V_5 = nn.Linear(recogniser_output_dim * self.num_prev_models, recogniser_output_dim)
             # self.U_5 = nn.Linear(300, output_dim, bias=False)
-            self.lstm = nn.LSTM(input_size=recogniser_output_dim*2, hidden_size=self.hidden_dim)
+            self.lstm = nn.LSTM(input_size=recogniser_output_dim * 2, hidden_size=self.hidden_dim)
         else:
             self.lstm = nn.LSTM(input_size=recogniser_output_dim, hidden_size=self.hidden_dim)
 
@@ -205,7 +205,7 @@ class NetPNN_RNN(SaveableNNModule):
         # FC Layer 1
         if num_prev_rnns > 0:
             self.scalar_6 = nn.Parameter(torch.from_numpy(np.ones(1, dtype=np.float32)))
-            self.V_6 = nn.Linear(self.hidden_dim*num_prev_rnns, self.hidden_dim)
+            self.V_6 = nn.Linear(self.hidden_dim * num_prev_rnns, self.hidden_dim)
             self.U_6 = nn.Linear(self.hidden_dim, self.output_dim, bias=False)
 
         self.fc1 = nn.Linear(self.hidden_dim, self.output_dim)
@@ -216,7 +216,7 @@ class NetPNN_RNN(SaveableNNModule):
         t2 = torch.zeros(1, batch_size, self.hidden_dim)
 
         if torch.cuda.is_available():
-            #print("converting to cuda")
+            # print("converting to cuda")
             t1.cuda()
             t2.cuda()
 
@@ -242,24 +242,24 @@ class NetPNN_RNN(SaveableNNModule):
                 prev_recogniser_activations.append(outputs_from_model_i)
 
             prev_recogniser_activations = torch.cat(prev_recogniser_activations, dim=2)
-            anterior_features = F.relu(self.V_5(self.scalar_5*prev_recogniser_activations))
+            anterior_features = F.relu(self.V_5(self.scalar_5 * prev_recogniser_activations))
             main_recogniser_activations = torch.cat([main_recogniser_activations, anterior_features], dim=2)
 
         batch_size = x_list.data.shape[0]
         self.reset_hidden_state(batch_size)
         # from [batch_size, list_size, items] to [list_size, batch_size, items]
-        #print("main_recogniser_activations.shape: {}".format(main_recogniser_activations.shape))
+        # print("main_recogniser_activations.shape: {}".format(main_recogniser_activations.shape))
         main_recogniser_activations = torch.transpose(main_recogniser_activations, 0, 1)
-        #print("main_recogniser_activations.shape: {}".format(main_recogniser_activations.shape))
+        # print("main_recogniser_activations.shape: {}".format(main_recogniser_activations.shape))
 
         lstm_out, self.hidden = self.lstm(main_recogniser_activations, self.hidden)
 
-        #print("lstm_out.shape: {}".format(lstm_out.shape))
+        # print("lstm_out.shape: {}".format(lstm_out.shape))
 
         last_hidden_state = lstm_out[-1]
 
         activations = [last_hidden_state]
-        #print("last_hidden_state.shape: {}".format(last_hidden_state.shape))
+        # print("last_hidden_state.shape: {}".format(last_hidden_state.shape))
 
         # main column's logits:
         mcl6 = self.fc1(last_hidden_state)
