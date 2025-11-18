@@ -8,7 +8,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from HOUDINI.Synthesizer.ReprUtils import repr_py  # added for debugging purposes
 
-from typing import NamedTuple, List, Tuple, Dict
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 import os
@@ -151,7 +151,8 @@ _TaskSettings = NamedTuple('TaskSettings', [
     ('epochs', int),
     ('synthesizer', str),  # 'enumerative'| 'evolutionary',
     ('batch_size', int),
-    ('dbg_learn_parameters', bool)  # If False, it won't learn new parameters
+    ('dbg_learn_parameters', bool),  # If False, it won't learn new parameters
+    ('progressive_tuning_schedule', Optional[List[Dict[str, Any]]])  # Progressive tuning stages
 ])
 
 
@@ -159,9 +160,26 @@ class TaskSettings(_TaskSettings):
     """
     A named tuple with default parameters
     """
-    def __new__(cls, batch_size=150, dbg_learn_parameters=True, **kwargs):
-        return super(TaskSettings, cls).__new__(cls, batch_size=batch_size, dbg_learn_parameters=dbg_learn_parameters,
-                                                **kwargs)
+    def __new__(cls, batch_size=150, dbg_learn_parameters=True, progressive_tuning_schedule=None, **kwargs):
+        kwargs = dict(kwargs)
+        if progressive_tuning_schedule is None:
+            progressive_tuning_schedule = cls._default_progressive_schedule(kwargs)
+        return super(TaskSettings, cls).__new__(
+            cls,
+            batch_size=batch_size,
+            dbg_learn_parameters=dbg_learn_parameters,
+            progressive_tuning_schedule=progressive_tuning_schedule,
+            **kwargs)
+
+    @staticmethod
+    def _default_progressive_schedule(kwargs: Dict[str, Any]) -> List[Dict[str, Any]]:
+        epochs = kwargs.get('epochs', 1) or 1
+        top_k = kwargs.get('K', 1) or 1
+        return [
+            {"train_fraction": 0.1, "epochs": max(1, epochs // 5), "max_candidates": max(top_k * 4, top_k)},
+            {"train_fraction": 0.4, "epochs": max(1, epochs // 2), "max_candidates": max(top_k * 2, top_k)},
+            {"train_fraction": 1.0, "epochs": epochs, "max_candidates": top_k},
+        ]
 
 
 class Task:
@@ -188,7 +206,12 @@ class Task:
             concreteTypes = [mkRealTensorSort([1, 64, 4, 4]), mkBoolTensorSort([1, 1]), mkRealTensorSort([1, 50])]
             synth = SymbolicSynthesizer(self.seq.lib, self.fn_sort, nnprefix, concreteTypes)
 
-            ns_settings = NeuralSynthesizerSettings(self.settings.N, self.settings.M, self.settings.K)
+            ns_settings = NeuralSynthesizerSettings(
+                self.settings.N,
+                self.settings.M,
+                self.settings.K,
+                self.settings.progressive_tuning_schedule,
+            )
             assert self.seq.lib is not None
             nsynth = NeuralSynthesizer(interpreter, synth, self.seq.lib, self.fn_sort, self.settings.dbg_learn_parameters, ns_settings)
             return nsynth

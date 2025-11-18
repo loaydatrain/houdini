@@ -1,9 +1,10 @@
 import logging
 import time
 import traceback
-from typing import Tuple, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from Data.DataGenerator import NumpyDataSetIterator
 
 # from HOUDINI.Data.DataProvider_old import split_into_train_and_validation, get_batch_count_iseven
 from HOUDINI.Interpreter.Interpreter import Interpreter
@@ -24,12 +25,26 @@ NeuralSynthesizerSettings = NamedTuple("NeuralSynthesizerSettings", [
     ('N', int),  # Generate at most N programs.
     ('M', int),  # Evaluate at most M programs.
     ('K', int),  # Return top-k programs
+    ('progressive_tuning_schedule', Optional[List[Dict[str, Any]]]),  # Progressive tuning stages
+])
+
+ProgressiveTuningStage = NamedTuple("ProgressiveTuningStage", [
+    ('train_fraction', float),
+    ('max_candidates', Optional[int]),
+    ('epochs', Optional[int])
 ])
 
 
 class NSDebugInfo:
     def __init__(self, dprog):
         self.dprog = dprog
+
+
+class _CandidateState:
+    def __init__(self, prog, unkSortMap):
+        self.prog = prog
+        self.unkSortMap = unkSortMap
+        self.latest_result = None
 
 
 def _debug_info(prog: PPTerm, unkSortMap, lib: FnLibrary, fnSort: PPSort):
@@ -93,6 +108,7 @@ class NeuralSynthesizer:
         self.sort = sort
         self.settings = settings
         self.prog_unkinfo_tuples = []
+        self.progressive_schedule = self._normalize_progressive_schedule(settings.progressive_tuning_schedule)
 
         self.dbg_learn_parameters = dbg_learn_parameters
 
@@ -100,6 +116,56 @@ class NeuralSynthesizer:
         self.evaluated_programs_type_info = []
 
         self.init_progs()
+
+    def _normalize_progressive_schedule(self, schedule_data):
+        if not schedule_data:
+            return []
+
+        normalized = []
+        for raw_stage in schedule_data:
+            if isinstance(raw_stage, ProgressiveTuningStage):
+                normalized.append(raw_stage)
+                continue
+
+            if isinstance(raw_stage, dict):
+                train_fraction = raw_stage.get('train_fraction', 1.0)
+                max_candidates = raw_stage.get('max_candidates')
+                epochs = raw_stage.get('epochs')
+            else:
+                # assume tuple-like ordering
+                train_fraction, max_candidates, epochs = raw_stage
+
+            train_fraction = float(train_fraction)
+            train_fraction = max(0.01, min(1.0, train_fraction))
+            if max_candidates is not None:
+                max_candidates = int(max_candidates)
+                if max_candidates <= 0:
+                    max_candidates = None
+            if epochs is not None:
+                epochs = max(1, int(epochs))
+
+            normalized.append(ProgressiveTuningStage(train_fraction, max_candidates, epochs))
+
+        return normalized
+
+    def _slice_io_examples(self, io_examples, fraction):
+        if io_examples is None or fraction is None or fraction >= 0.9999:
+            return io_examples
+
+        fraction = max(0.0, min(1.0, fraction))
+
+        if issubclass(type(io_examples), NumpyDataSetIterator):
+            total = io_examples.inputs.shape[0]
+            count = max(1, int(total * fraction))
+            return io_examples.inputs[:count], io_examples.targets[:count]
+        elif type(io_examples) == tuple:
+            total = io_examples[0].shape[0]
+            count = max(1, int(total * fraction))
+            return io_examples[0][:count], io_examples[1][:count]
+        elif type(io_examples) == list:
+            return [self._slice_io_examples(item, fraction) for item in io_examples]
+        else:
+            return io_examples
 
     def init_progs(self):
         n = 0
@@ -161,12 +227,20 @@ class NeuralSynthesizer:
             top_k_solutions_results[i][1]["new_fns_dict"] = None
 
     def solve(self, io_examples_tr, io_examples_val, io_examples_test) -> List[Tuple[PPTerm, float]]:
-        top_k_solutions_results = []
+        if self.progressive_schedule:
+            result = self._solve_progressive(io_examples_tr, io_examples_val, io_examples_test)
+        else:
+            result = self._solve_single_pass(io_examples_tr, io_examples_val, io_examples_test)
 
+        self._log_evaluated_programs()
+        return result
+
+    def _solve_single_pass(self, io_examples_tr, io_examples_val, io_examples_test):
+        top_k_solutions_results = []
         for prog, unkSortMap in self.prog_unkinfo_tuples:
             try:
                 interpreter_res = self.interpret(prog, unkSortMap, io_examples_tr, io_examples_val, io_examples_test)
-            except NotHandledException as e:
+            except NotHandledException:
                 self.log_unhandled_program(prog)
                 continue
             except Exception as e:
@@ -174,25 +248,72 @@ class NeuralSynthesizer:
                 traceback.print_exc()
                 self.log_evaluator_exception(e, prog, unkSortMap)
                 continue
-            """
-            if not self.dbg_learn_parameters:
-                evaluations_np = np.ones((1, 1))
-                interpreter_res = {
-                    "accuracy": 0., "test_accuracy": 0, "area_utc": 0.,
-                    "new_fns_dict": None, 'evaluations_np': evaluations_np}
-            else:
-            """
 
             top_k_solutions_results.append((prog, interpreter_res))
             self.update_top_k(top_k_solutions_results)
 
+        return NeuralSynthesizerResult(top_k_solutions_results)
+
+    def _solve_progressive(self, io_examples_tr, io_examples_val, io_examples_test):
+        if not self.prog_unkinfo_tuples:
+            return NeuralSynthesizerResult([])
+
+        candidates = [_CandidateState(prog, unkSortMap) for prog, unkSortMap in self.prog_unkinfo_tuples]
+        active_candidates = candidates
+        original_epochs = self.interpreter.epochs
+
+        try:
+            for stage_idx, stage in enumerate(self.progressive_schedule):
+                print("BEGIN_PROGRESSIVE_STAGE %d: fraction=%.2f, epochs=%s, survivors=%s" % (
+                    stage_idx,
+                    stage.train_fraction,
+                    stage.epochs if stage.epochs is not None else self.interpreter.original_num_epochs,
+                    stage.max_candidates if stage.max_candidates is not None else 'ALL'))
+                stage_train_examples = self._slice_io_examples(io_examples_tr, stage.train_fraction)
+                stage_epochs = stage.epochs if stage.epochs is not None else self.interpreter.original_num_epochs
+                self.interpreter.epochs = stage_epochs
+
+                evaluated_candidates = []
+                for candidate in active_candidates:
+                    try:
+                        interpreter_res = self.interpret(candidate.prog, candidate.unkSortMap,
+                                                         stage_train_examples,
+                                                         io_examples_val,
+                                                         io_examples_test)
+                    except NotHandledException:
+                        self.log_unhandled_program(candidate.prog)
+                        continue
+                    except Exception as e:
+                        e.args += _debug_info(candidate.prog, candidate.unkSortMap, self.lib, self.sort)
+                        traceback.print_exc()
+                        self.log_evaluator_exception(e, candidate.prog, candidate.unkSortMap)
+                        continue
+
+                    candidate.latest_result = interpreter_res
+                    evaluated_candidates.append(candidate)
+
+                evaluated_candidates.sort(key=lambda c: c.latest_result['accuracy'], reverse=True)
+                if stage.max_candidates is not None:
+                    evaluated_candidates = evaluated_candidates[:stage.max_candidates]
+
+                print("END_PROGRESSIVE_STAGE %d: surviving candidates=%d" % (stage_idx, len(evaluated_candidates)))
+                active_candidates = evaluated_candidates
+                if not active_candidates:
+                    break
+        finally:
+            self.interpreter.epochs = original_epochs
+
+        top_k_solutions_results = [(cand.prog, cand.latest_result)
+                                   for cand in active_candidates if cand.latest_result is not None]
+        self.update_top_k(top_k_solutions_results)
+        return NeuralSynthesizerResult(top_k_solutions_results)
+
+    def _log_evaluated_programs(self):
         print("Exiting NeuralSynthesizer.solve(). The following programs were evaluated:")
         for idx, program_str in enumerate(self.evaluated_programs_str):
             print(program_str)
             print(self.evaluated_programs_type_info[idx])
             print("..........................")
-
-        return NeuralSynthesizerResult(top_k_solutions_results)
 
     def log_evaluated_program(self, prog):
         print("Program evaluated: %s" % repr_py(prog))
@@ -213,5 +334,3 @@ class NeuralSynthesizer:
         loggerE = logging.getLogger('pp.exceptions')
         e.args += _debug_info(prog, unkSortMap, self.lib, self.sort)
         loggerE.error('#### Exception in the Interpreter.\n %s' % repr(e))
-
-
