@@ -15,6 +15,8 @@ from HOUDINI.Synthesizer import ReprUtils
 from HOUDINI.Synthesizer.AST import *
 from HOUDINI.Synthesizer.ASTUtils import deconstruct
 
+from tqdm import tqdm
+
 
 # from HOUDINI.Data.DataProvider_old import *
 
@@ -233,8 +235,10 @@ class Interpreter:
 
         prev_accuracy = 0
         current_iteration = 0
-        for epoch in range(self.epochs):
-            print("Starting epoch ", epoch, " / ", self.epochs)
+        pbar = tqdm(range(self.epochs), desc="Training", unit="epoch")
+
+        for epoch in pbar:
+            # print("Starting epoch ", epoch, " / ", self.epochs)
 
             for y_pred, y in self._predict_data(program, data_loader_tr, new_fns_dict):
                 # if x is a 2d list, convert it to a variable
@@ -284,7 +288,9 @@ class Interpreter:
                         for new_fn_name, new_fn in new_fns_dict.items():
                             max_accuracy_new_fns_states[new_fn_name] = self._clone_hidden_state(new_fn.state_dict())
 
-                    print("c_accuracy", c_accuracy)
+                    # print("c_accuracy", c_accuracy)
+                    pbar.set_postfix({"c_acc": f"{c_accuracy:.5f}"})
+                    pbar.set_postfix({"max_acc": f"{max_accuracy:.5f}"})
 
                     # set all new functions to train mode
                     for key, value in new_fns_dict.items():

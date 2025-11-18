@@ -1,6 +1,7 @@
 import logging
 import time
 import traceback
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -109,6 +110,9 @@ class NeuralSynthesizer:
         self.settings = settings
         self.prog_unkinfo_tuples = []
         self.progressive_schedule = self._normalize_progressive_schedule(settings.progressive_tuning_schedule)
+        self.rejection_counts = defaultdict(int)
+        self.total_rejections = 0
+        self._needs_rejection_newline = False
 
         self.dbg_learn_parameters = dbg_learn_parameters
 
@@ -197,6 +201,8 @@ class NeuralSynthesizer:
                 if ecode != 2:
                     self.log_rejected_program(prog, ecode)
 
+        if self._needs_rejection_newline:
+            print()
         print('END_PROGRAM_GENERATION, Time: %s' % getElapsedTime())
         pEnd = time.time()
         print("TIME_TAKEN_SYNTH, %s" % formatTime(pEnd - pStart))
@@ -318,9 +324,19 @@ class NeuralSynthesizer:
     def log_evaluated_program(self, prog):
         print("Program evaluated: %s" % repr_py(prog))
 
+    # def log_rejected_program(self, prog, ecode):
+    #     print("Program rejected (ecode %d): %s" % (ecode, repr_py(prog)))
+    #     # print("Program rejected (pyrep): %s" % str(prog))
     def log_rejected_program(self, prog, ecode):
-        print("Program rejected (ecode %d): %s" % (ecode, repr_py(prog)))
-        # print("Program rejected (pyrep): %s" % str(prog))
+        self.total_rejections += 1
+        self.rejection_counts[ecode] += 1
+        stats_str = ', '.join(
+            f"{code}:{count}" for code, count in sorted(self.rejection_counts.items(), key=lambda kv: kv[0]))
+        bar = f"Rejected programs: {self.total_rejections} | ecode distribution [{stats_str}]"
+        print('\r' + bar, end='', flush=True)
+        self._needs_rejection_newline = True
+        # keep repr_py call to preserve side-effect expectations if needed
+
 
     def log_unhandled_program(self, prog):
         print("Program not handled: %s" % repr_py(prog))
