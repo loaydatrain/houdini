@@ -289,8 +289,7 @@ class Interpreter:
                             max_accuracy_new_fns_states[new_fn_name] = self._clone_hidden_state(new_fn.state_dict())
 
                     # print("c_accuracy", c_accuracy)
-                    pbar.set_postfix({"c_acc": f"{c_accuracy:.5f}"})
-                    pbar.set_postfix({"max_acc": f"{max_accuracy:.5f}"})
+                    pbar.set_postfix({"c_acc": f"{c_accuracy:.5f}", "max_acc": f"{max_accuracy:.5f}"})
 
                     # set all new functions to train mode
                     for key, value in new_fns_dict.items():
@@ -298,7 +297,7 @@ class Interpreter:
 
                 current_iteration += 1
 
-        print("max_accuracy_found_during_training:", max_accuracy)
+        # print("max_accuracy_found_during_training:", max_accuracy)
         #set the state_dictionaries of the new functions to the model with best validation accuracy
         for new_fn_name, new_fn in new_fns_dict.items():
             new_fn.load_state_dict(max_accuracy_new_fns_states[new_fn_name])
@@ -354,8 +353,8 @@ class Interpreter:
                                                                         data_loader_tr, data_loader_val, data_loader_test)
         val_accuracy = self._get_accuracy(program, data_loader_val, output_type, new_fns_dict)
         test_accuracy = self._get_accuracy(program, data_loader_test, output_type, new_fns_dict)
-        print("validation accuracy=", val_accuracy)
-        print("test accuracy=", test_accuracy)
+        print("validation accuracy=", val_accuracy, ", test accuracy=", test_accuracy)
+        # print("test accuracy=", test_accuracy)
         return {"accuracy": val_accuracy, "new_fns_dict": new_fns_dict,
                 "test_accuracy": test_accuracy, "evaluations_np": evaluations_np}
 

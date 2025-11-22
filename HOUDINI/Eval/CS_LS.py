@@ -241,5 +241,6 @@ if __name__ == '__main__':
 
     for sequence_idx, sequence in enumerate(seq_info_dict["sequences"]):
         for task_id in range(seq_info_dict["num_tasks"]):
+            for i in range(10): print("RUNNING ", sequence_idx, sequence, task_id)
             main(task_id=task_id, sequence_str=sequence,
                  sequence_name=prefixes[sequence_idx], synthesizer=settings["synthesizer"])

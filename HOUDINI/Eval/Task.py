@@ -237,6 +237,18 @@ class Task:
             print(repr_py(c_prog))
             print(c_unkSortMap)
 
+        # LOAY CHANGING THE SCHEDULING HERE AFTER GENERATION
+        num_candidates = len(nsynth.prog_unkinfo_tuples)
+        fallback_schedule = [
+            {"train_fraction": 0.1, "epochs": max(1, self.settings.epochs // 5),
+            "max_candidates": max(1, num_candidates)},
+            {"train_fraction": 0.4, "epochs": max(1, self.settings.epochs // 2),
+            "max_candidates": max(1,num_candidates // 2)},
+            {"train_fraction": 1.0, "epochs": self.settings.epochs,
+            "max_candidates": max(1,num_candidates // 4)},
+        ]
+        nsynth.progressive_schedule = nsynth._normalize_progressive_schedule(fallback_schedule)
+
         train_io, val_io, test_io = self.get_io_examples()
 
         max_iterations = \

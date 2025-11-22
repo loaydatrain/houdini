@@ -177,6 +177,7 @@ class NeuralSynthesizer:
         pStart = time.time()
         print('BEGIN_PROGRAM_GENERATION, Time: %s' % getElapsedTime())
         for prog, unkSortMap in self.synthesizer.genProgs():
+            # print(m,n)
             n += 1
             if n % 100 == 0:
                 print('.', end='', flush=True)
@@ -260,9 +261,17 @@ class NeuralSynthesizer:
 
         return NeuralSynthesizerResult(top_k_solutions_results)
 
+
+# (PPFuncApp≈(fn=PPVar(name='lib.compose'), args=[PPTermUnk(name='nn_fun_cs1_d0d1_np_tdr0_2', sort=PPFuncSort(args=[PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=64), PPDimConst(value=4), PPDimConst(value=4)])], rtpe=PPTensorSort(param_sort=PPBool(), shape=[PPDimConst(value=1), PPDimConst(value=1)]))), PPTermUnk(name='nn_fun_cs1_d0d1_np_tdr0_3', sort=PPFuncSort(args=[PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=1), PPDimConst(value=28), PPDimConst(value=28)])], rtpe=PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=64), PPDimConst(value=4), PPDimConst(value=4)])))]), 
+# {'nn_fun_cs1_d0d1_np_tdr0_2': PPFuncSort(args=[PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=64), PPDimConst(value=4), PPDimConst(value=4)])], rtpe=PPTensorSort(param_sort=PPBool(), shape=[PPDimConst(value=1), PPDimConst(value=1)])), 'nn_fun_cs1_d0d1_np_tdr0_3': PPFuncSort(args=[PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=1), PPDimConst(value=28), PPDimConst(value=28)])], rtpe=PPTensorSort(param_sort=PPReal(), shape=[PPDimConst(value=1), PPDimConst(value=64), PPDimConst(value=4), PPDimConst(value=4)]))})
+
     def _solve_progressive(self, io_examples_tr, io_examples_val, io_examples_test):
         if not self.prog_unkinfo_tuples:
             return NeuralSynthesizerResult([])
+
+        # for t in self.prog_unkinfo_tuples:
+        #     print(t)
+        # sys.exit()
 
         candidates = [_CandidateState(prog, unkSortMap) for prog, unkSortMap in self.prog_unkinfo_tuples]
         active_candidates = candidates
@@ -270,6 +279,7 @@ class NeuralSynthesizer:
 
         try:
             for stage_idx, stage in enumerate(self.progressive_schedule):
+                print("\n"*3, "="*50)
                 print("BEGIN_PROGRESSIVE_STAGE %d: fraction=%.2f, epochs=%s, survivors=%s" % (
                     stage_idx,
                     stage.train_fraction,
@@ -281,6 +291,7 @@ class NeuralSynthesizer:
 
                 evaluated_candidates = []
                 for candidate in active_candidates:
+                    # print("\ncandidates", candidate.prog, active_candidates, "\n")
                     try:
                         interpreter_res = self.interpret(candidate.prog, candidate.unkSortMap,
                                                          stage_train_examples,
@@ -299,6 +310,7 @@ class NeuralSynthesizer:
                     evaluated_candidates.append(candidate)
 
                 evaluated_candidates.sort(key=lambda c: c.latest_result['accuracy'], reverse=True)
+                print("num of evaluated candidates", len(evaluated_candidates))
                 if stage.max_candidates is not None:
                     evaluated_candidates = evaluated_candidates[:stage.max_candidates]
 
