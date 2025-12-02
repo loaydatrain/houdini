@@ -1,3 +1,4 @@
+import sys
 import logging
 import time
 import traceback
@@ -345,7 +346,9 @@ class NeuralSynthesizer:
         stats_str = ', '.join(
             f"{code}:{count}" for code, count in sorted(self.rejection_counts.items(), key=lambda kv: kv[0]))
         bar = f"Rejected programs: {self.total_rejections} | ecode distribution [{stats_str}]"
-        print('\r' + bar, end='', flush=True)
+        # Clear the line completely before printing the new bar
+        sys.stdout.write('\r\033[K' + bar)
+        sys.stdout.flush()
         self._needs_rejection_newline = True
         # keep repr_py call to preserve side-effect expectations if needed
 

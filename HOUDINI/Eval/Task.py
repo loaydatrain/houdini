@@ -23,6 +23,7 @@ from HOUDINI.Synthesizer.SymbolicSynthesizerEA import SymbolicSynthesizerEA
 from HOUDINI.Synthesizer.AST import PPSort, PPTerm
 from HOUDINI.Synthesizer.ReprUtils import repr_py
 from HOUDINI.Synthesizer.SymbolicSynthesizer import SymbolicSynthesizer
+from HOUDINI.NeuralSynthesizerNAS import NeuralSynthesizerNAS # Import new synthesizer
 
 
 class TaskResultSingle:
@@ -149,9 +150,9 @@ _TaskSettings = NamedTuple('TaskSettings', [
     ('M', int),  # Max number of solutions evaluated by the interpreter
     ('K', int),  # Number of top solutions to store.
     ('epochs', int),
-    ('synthesizer', str),  # 'enumerative'| 'evolutionary',
+    ('synthesizer', str),  # 'enumerative'| 'evolutionary' | 'nas',
     ('batch_size', int),
-    ('dbg_learn_parameters', bool),  # If False, it won't learn new parameters
+    ('dbg_learn_parameters', bool),  # If False, it won't learn parameters
     ('progressive_tuning_schedule', Optional[List[Dict[str, Any]]])  # Progressive tuning stages
 ])
 
@@ -201,7 +202,7 @@ class Task:
         interpreter = Interpreter(self.seq.lib, epochs=self.settings.epochs, batch_size=self.settings.batch_size)
         nnprefix = self.seq.sname() + self.sname()
 
-        if self.settings.synthesizer == 'enumerative':
+        if self.settings.synthesizer == 'enumerative' or self.settings.synthesizer == 'nas':
             # concrete_types = [mkRealTensorSort([1, 64, 4, 4]), mkRealTensorSort([1, 50])]
             concreteTypes = [mkRealTensorSort([1, 64, 4, 4]), mkBoolTensorSort([1, 1]), mkRealTensorSort([1, 50])]
             synth = SymbolicSynthesizer(self.seq.lib, self.fn_sort, nnprefix, concreteTypes)
@@ -213,7 +214,13 @@ class Task:
                 self.settings.progressive_tuning_schedule,
             )
             assert self.seq.lib is not None
-            nsynth = NeuralSynthesizer(interpreter, synth, self.seq.lib, self.fn_sort, self.settings.dbg_learn_parameters, ns_settings)
+            
+            if self.settings.synthesizer == 'nas':
+                # Use AZ-NAS Synthesizer
+                nsynth = NeuralSynthesizerNAS(interpreter, synth, self.seq.lib, self.fn_sort, self.settings.dbg_learn_parameters, ns_settings)
+            else:
+                # Default Enumerative
+                nsynth = NeuralSynthesizer(interpreter, synth, self.seq.lib, self.fn_sort, self.settings.dbg_learn_parameters, ns_settings)
             return nsynth
         elif self.settings.synthesizer == 'evolutionary':
             concreteTypes = [mkRealTensorSort([1, 64, 4, 4]), mkBoolTensorSort([1, 1]), mkRealTensorSort([1, 50])]
