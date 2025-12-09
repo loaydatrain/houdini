@@ -118,6 +118,9 @@ class NeuralSynthesizer:
 
         self.evaluated_programs_str = []
         self.evaluated_programs_type_info = []
+        self.current_task_id: Optional[int] = None
+        self.current_run_index: Optional[int] = None
+        self.current_sequence_label: Optional[str] = None
 
         self.init_progs()
 
@@ -280,13 +283,23 @@ class NeuralSynthesizer:
         try:
             for stage_idx, stage in enumerate(self.progressive_schedule):
                 print("\n"*3, "="*50)
-                print("BEGIN_PROGRESSIVE_STAGE %d: fraction=%.2f, epochs=%s, survivors=%s" % (
+                stage_epochs = stage.epochs if stage.epochs is not None else self.interpreter.original_num_epochs
+                stage_survivors = stage.max_candidates if stage.max_candidates is not None else 'ALL'
+                context_bits = []
+                if self.current_run_index is not None:
+                    context_bits.append(f"run={self.current_run_index}")
+                if self.current_task_id is not None:
+                    context_bits.append(f"task_id={self.current_task_id}")
+                if self.current_sequence_label:
+                    context_bits.append(f"sequence={self.current_sequence_label}")
+                context_suffix = " | " + ", ".join(context_bits) if context_bits else ""
+                print("BEGIN_PROGRESSIVE_STAGE %d: fraction=%.2f, epochs=%s, survivors=%s%s" % (
                     stage_idx,
                     stage.train_fraction,
-                    stage.epochs if stage.epochs is not None else self.interpreter.original_num_epochs,
-                    stage.max_candidates if stage.max_candidates is not None else 'ALL'))
+                    stage_epochs,
+                    stage_survivors,
+                    context_suffix))
                 stage_train_examples = self._slice_io_examples(io_examples_tr, stage.train_fraction)
-                stage_epochs = stage.epochs if stage.epochs is not None else self.interpreter.original_num_epochs
                 self.interpreter.epochs = stage_epochs
 
                 evaluated_candidates = []
@@ -311,10 +324,11 @@ class NeuralSynthesizer:
 
                 evaluated_candidates.sort(key=lambda c: c.latest_result['accuracy'], reverse=True)
                 print("num of evaluated candidates", len(evaluated_candidates))
+                original_candidates = len(evaluated_candidates)
                 if stage.max_candidates is not None:
                     evaluated_candidates = evaluated_candidates[:stage.max_candidates]
 
-                print("END_PROGRESSIVE_STAGE %d: surviving candidates=%d" % (stage_idx, len(evaluated_candidates)))
+                print(f"END_PROGRESSIVE_STAGE {stage_idx}: original candidates: {original_candidates} surviving={len(evaluated_candidates)}{context_suffix}")
                 active_candidates = evaluated_candidates
                 if not active_candidates:
                     break

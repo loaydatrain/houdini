@@ -83,6 +83,7 @@ class TaskSeq:
 
     def run(self, id) -> TaskResult:
         task = self.tasks[id]
+        task.current_task_id = id
 
         # Load the library from disk
         print("Loading Library...")

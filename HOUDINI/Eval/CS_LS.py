@@ -157,7 +157,8 @@ def get_task_settings(dbg_mode, dbg_learn_parameters, synthesizer=None):
         task_settings = TaskSettings(
             train_size=6000,
             val_size=2100,
-            training_percentages=[2, 10, 20, 50, 100],
+            training_percentages=[100],
+            # training_percentages=[2, 10, 20, 50, 100],
             N=10000,
             M=50,
             K=50,
@@ -199,6 +200,7 @@ def main(task_id, sequence_str, sequence_name, synthesizer):
 
     seq = CountingSequence(sequence_name, seq_tasks_info, settings["dbg_learn_parameters"], seq_settings, task_settings,
                            lib)
+    seq.current_sequence_label = sequence
     seq.run(task_id)
 
 

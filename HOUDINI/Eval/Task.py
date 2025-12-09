@@ -189,6 +189,7 @@ class Task:
         self.seq = seq
 
         self.dbg_learn_parameters = dbg_learn_parameters
+        self.current_task_id: Optional[int] = None
 
     def name(self):
         return NotImplementedError()
@@ -230,24 +231,29 @@ class Task:
         tStart = time.time()
         print("BEGIN_TASK, Time: %s" % getElapsedTime())
         nsynth = self._mkNSynth()
+        # Annotate nsynth with task-specific metadata for downstream logging.
+        nsynth.current_task_id = self.current_task_id
+        nsynth.current_sequence_label = getattr(self.seq, "current_sequence_label", self.seq.name())
 
         print("Num of programs selected for evaluation: %d" % len(nsynth.prog_unkinfo_tuples))
-        print("Programs selected for evaluation:")
-        for c_prog, c_unkSortMap in nsynth.prog_unkinfo_tuples:
-            print(repr_py(c_prog))
-            print(c_unkSortMap)
+        # print("Programs selected for evaluation:")
+        # for c_prog, c_unkSortMap in nsynth.prog_unkinfo_tuples:
+        #     print(repr_py(c_prog))
+        #     print(c_unkSortMap)
 
         # LOAY CHANGING THE SCHEDULING HERE AFTER GENERATION
         num_candidates = len(nsynth.prog_unkinfo_tuples)
         fallback_schedule = [
             {"train_fraction": 0.1, "epochs": max(1, self.settings.epochs // 5),
-            "max_candidates": max(1, num_candidates)},
+            "max_candidates": max(1, num_candidates// 2)},
             {"train_fraction": 0.4, "epochs": max(1, self.settings.epochs // 2),
-            "max_candidates": max(1,num_candidates // 2)},
-            {"train_fraction": 1.0, "epochs": self.settings.epochs,
             "max_candidates": max(1,num_candidates // 4)},
+            {"train_fraction": 1.0, "epochs": self.settings.epochs,
+            "max_candidates": max(1,num_candidates // 8)},
         ]
+        print("original schedule:",nsynth.progressive_schedule)
         nsynth.progressive_schedule = nsynth._normalize_progressive_schedule(fallback_schedule)
+        print(f"new schedule for {len(nsynth.prog_unkinfo_tuples)} programs:",nsynth.progressive_schedule)
 
         train_io, val_io, test_io = self.get_io_examples()
 
@@ -268,6 +274,7 @@ class Task:
             c_res = TaskResultSingle()
 
             try:
+                nsynth.current_run_index = i
                 nsynth_res: NeuralSynthesizerResult = nsynth.solve(c_tr_io_examples, val_io, test_io)
 
                 c_res.top_k_solutions_results = nsynth_res.top_k_solutions_results
