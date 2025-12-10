@@ -157,13 +157,14 @@ def get_task_settings(dbg_mode, dbg_learn_parameters, synthesizer=None):
         task_settings = TaskSettings(
             train_size=6000,
             val_size=2100,
-            training_percentages=[2, 10, 20, 50, 100],
+            # training_percentages=[2, 10, 20, 50, 100],
+            training_percentages=[100],
             N=10000,
             M=50,
             K=50,
             epochs=30,
             synthesizer=synthesizer,
-            dbg_learn_parameters=dbg_learn_parameters
+            dbg_learn_parameters=dbg_learn_parameters,
         )
     else:
         task_settings = TaskSettings(
@@ -175,7 +176,7 @@ def get_task_settings(dbg_mode, dbg_learn_parameters, synthesizer=None):
             K=2,
             epochs=1,
             synthesizer=synthesizer,
-            dbg_learn_parameters=dbg_learn_parameters
+            dbg_learn_parameters=dbg_learn_parameters,
         )
     return task_settings
 
@@ -230,7 +231,7 @@ if __name__ == '__main__':
         "dbg_learn_parameters": True,  # If False, the interpreter doesn't learn the new parameters
         "dbg_mode": args.dbg,  # If True, the sequences run for a tiny amount of data
         "synthesizer": args.synthesizer,  # enumerative, evolutionary, nas
-        "seq_string": args.taskseq  # "ls"  # cs1, cs2, cs3, ls
+        "seq_string": args.taskseq,  # "ls"  # cs1, cs2, cs3, ls
     }
 
     seq_info_dict = get_sequence_info(settings["seq_string"])

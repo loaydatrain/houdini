@@ -218,7 +218,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--synthesizer',
-                        choices=['enumerative', 'evolutionary'],
+                        choices=['enumerative', 'evolutionary', 'nas'],
                         default='enumerative',
                         help='Synthesizer type. (default: %(default)s)')
     parser.add_argument('--taskseq',

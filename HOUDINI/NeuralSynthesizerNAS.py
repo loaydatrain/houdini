@@ -13,6 +13,11 @@ from HOUDINI.FnLibraryFunctions import NotHandledException
 from HOUDINI.Interpreter.Interpreter import _get_unknown_fns_definitions
 from HOUDINI.Synthesizer.MiscUtils import getElapsedTime, formatTime
 
+# EXPERIMENTAL CONFIG
+NAS_EXPERIMENTAL_CONFIG = {
+    "validity_check": True  # Set to True to enable AZ-NAS validity check (random sampling, no pruning, logging)
+}
+
 class NeuralSynthesizerNAS(NeuralSynthesizer):
     """
     A subclass of NeuralSynthesizer that implements AZ-NAS based zero-cost proxy scoring
@@ -27,12 +32,14 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
         """
         pass
     
-    def compute_az_nas_score(self, prog, unkSortMap, io_examples) -> float:
+    def compute_az_nas_score(self, prog, unkSortMap, io_examples) -> Tuple[float, int]:
         """
         Computes a zero-cost proxy score (AZ-NAS style) for a given program without training.
         Combines Expressivity, Trainability, and Complexity.
+        Returns: (score, param_count)
         """
         score = 0.0
+        param_count = 0
         
         # 1. Determine output type and network definitions
         from HOUDINI.Synthesizer.AST import PPGraphSort
@@ -42,13 +49,13 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             unknown_fns_def = _get_unknown_fns_definitions(unkSortMap, is_graph)
         except Exception as e:
             # If we can't even define the functions, it's a bad candidate.
-            return -1.0
+            return -1.0, 0
 
         # 2. Create the Neural Modules (PyTorch) - Randomly Initialized
         new_fns_dict, trainable_params = self.interpreter.create_nns(unknown_fns_def)
         
         if not new_fns_dict:
-            return 0.0 # No neural components to score, maybe purely functional program?
+            return 0.0, 0 # No neural components to score, maybe purely functional program?
 
         # 3. Prepare a single batch of data
         data_loader = self.interpreter._get_data_loader(io_examples)
@@ -60,7 +67,7 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
         try:
             x_np, y_np = next(iterator)
         except StopIteration:
-            return 0.0
+            return 0.0, 0
 
         # Convert to Torch Variables
         x = Variable(torch.from_numpy(x_np))
@@ -167,12 +174,12 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # This is a simplified aggregation compared to the full AZ-NAS non-linear aggregation
             score = norm_expr + norm_train 
 
-            return score
+            return score, param_count
             
         except Exception as e:
             # print(f"Proxy evaluation failed: {e}")
             # traceback.print_exc()
-            return -1.0
+            return -1.0, 0
 
     def solve(self, io_examples_tr, io_examples_val, io_examples_test) -> List[Tuple[object, float]]:
         """
@@ -198,8 +205,8 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
                  
              if is_ok:
                  # 2. PROXY PHASE
-                 nas_score = self.compute_az_nas_score(prog, unkSortMap, io_examples_tr)
-                 candidates.append((nas_score, prog, unkSortMap))
+                 nas_score, param_count = self.compute_az_nas_score(prog, unkSortMap, io_examples_tr)
+                 candidates.append((nas_score, param_count, prog, unkSortMap))
                  n_found += 1
                  if n_found % 10 == 0:
                      # print('.', end='', flush=True) # This conflicts with the rejection bar
@@ -221,34 +228,66 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
         print(f"\nAZ-NAS: Reranking {len(candidates)} candidates.")
         
         # 3. RERANKING PHASE
-        # Sort by NAS score (descending)
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        
-        # Select top M
-        top_candidates = candidates[:self.settings.M]
-        print(f"AZ-NAS: Selected top {len(top_candidates)} for full evaluation.")
+        if NAS_EXPERIMENTAL_CONFIG.get("validity_check", False):
+            # VALIDITY CHECK MODE: Randomly sample M candidates
+            import random
+            import os
+            
+            # Filter out failed proxies if any (-1.0 score)
+            valid_candidates = [c for c in candidates if c[0] != -1.0]
+            
+            if len(valid_candidates) > self.settings.M:
+                top_candidates = random.sample(valid_candidates, self.settings.M)
+            else:
+                top_candidates = valid_candidates
+            
+            print(f"AZ-NAS Validity Check: Randomly sampled {len(top_candidates)} candidates.")
+            
+            # Setup logging file
+            log_file = "az_nas_validity_data.csv"
+            write_header = not os.path.exists(log_file)
+            with open(log_file, "a") as f:
+                if write_header:
+                    f.write("az_nas_score,param_count,accuracy,program\n")
+        else:
+            # STANDARD MODE: Sort by NAS score (descending)
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            
+            # Select top M
+            top_candidates = candidates[:self.settings.M]
+            print(f"AZ-NAS: Selected top {len(top_candidates)} for full evaluation.")
 
         # Populate the prog_unkinfo_tuples for compatibility if needed by other methods 
         # (like log methods or future progressive tuning)
-        self.prog_unkinfo_tuples = [(p, u) for _, p, u in top_candidates]
+        self.prog_unkinfo_tuples = [(p, u) for _, _, p, u in top_candidates]
 
         # 4. EVALUATION PHASE
         top_k_solutions_results = []
         
-        for i, (score, prog, unkSortMap) in enumerate(top_candidates):
-            print(f"Eval {i+1}/{len(top_candidates)} | NAS Score: {score:.4f} | Prog: {repr_py(prog)}")
+        for i, (score, param_count, prog, unkSortMap) in enumerate(top_candidates):
+            print(f"Eval {i+1}/{len(top_candidates)} | NAS Score: {score:.4f} | Params: {param_count} | Prog: {repr_py(prog)}")
             
             try:
                 interpreter_res = self.interpret(prog, unkSortMap, io_examples_tr, io_examples_val, io_examples_test)
                 top_k_solutions_results.append((prog, interpreter_res))
                 self.update_top_k(top_k_solutions_results)
+                
+                # Log validity data if enabled
+                if NAS_EXPERIMENTAL_CONFIG.get("validity_check", False):
+                    # interpret returns dict, usually has 'accuracy' (val)
+                    val_acc = interpreter_res.get('accuracy', -1.0)
+                    # Escape commas in program string for CSV safety
+                    prog_str = repr_py(prog).replace('"', '""')
+                    with open("az_nas_validity_data.csv", "a") as f:
+                        f.write(f'{score},{param_count},{val_acc},"{prog_str}"\n')
+
             except NotHandledException:
                 self.log_unhandled_program(prog)
             except Exception as e:
                 self.log_evaluator_exception(e, prog, unkSortMap)
 
         # Log evaluated programs for consistency with original class
-        for _, prog, _ in top_candidates:
+        for _, _, prog, _ in top_candidates:
              self.evaluated_programs_str.append(repr_py(prog))
              self.evaluated_programs_type_info.append(str(prog))
 
