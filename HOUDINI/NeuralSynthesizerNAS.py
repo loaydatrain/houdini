@@ -1,12 +1,15 @@
 import time
 import traceback
 import torch
+import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
 from typing import List, Tuple, Dict
 from collections import defaultdict
+import os
+import random
 
-from HOUDINI.NeuralSynthesizer import NeuralSynthesizer, NeuralSynthesizerResult, _debug_info
+from HOUDINI.NeuralSynthesizer import NeuralSynthesizer, NeuralSynthesizerResult, _debug_info, get_lib_names
 from HOUDINI.Synthesizer.ReprUtils import repr_py
 from HOUDINI.InterpreterFilters import is_evaluable
 from HOUDINI.FnLibraryFunctions import NotHandledException
@@ -51,13 +54,43 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # If we can't even define the functions, it's a bad candidate.
             return -1.0, 0
 
-        # 2. Create the Neural Modules (PyTorch) - Randomly Initialized
-        new_fns_dict, trainable_params = self.interpreter.create_nns(unknown_fns_def)
-        
-        if not new_fns_dict:
-            return 0.0, 0 # No neural components to score, maybe purely functional program?
+        # 2. Collect referenced library neural modules from the program
+        # Deduplicate library modules so shared weights are only counted once
+        lib_module_names = list(dict.fromkeys(get_lib_names(prog)))
+        lib_modules = []
+        seen_lib_modules = set()
+        for name in lib_module_names:
+            li = self.lib.get(name)
+            if li is None or not isinstance(li.obj, nn.Module):
+                continue
+            if id(li.obj) in seen_lib_modules:
+                continue
+            seen_lib_modules.add(id(li.obj))
+            lib_modules.append(li.obj)
 
-        # 3. Prepare a single batch of data
+        # 3. Create the Neural Modules (PyTorch) - Randomly Initialized
+        new_fns_dict, trainable_params_new = self.interpreter.create_nns(unknown_fns_def)
+
+        # Combine parameters: existing library modules + newly created modules
+        trainable_params_lib = []
+        for m in lib_modules:
+            trainable_params_lib.extend(list(m.parameters()))
+        # Ensure parameters are unique so shared modules aren't double-counted
+        all_params = list(trainable_params_new) + trainable_params_lib
+        seen_param_ids = set()
+        trainable_params = []
+        for p in all_params:
+            pid = id(p)
+            if pid in seen_param_ids:
+                continue
+            seen_param_ids.add(pid)
+            trainable_params.append(p)
+
+        # If there are no neural components at all, still return a neutral score/params
+        if not trainable_params and not lib_modules and not new_fns_dict:
+            return 0.0, 0
+
+        # 4. Prepare a single batch of data
         data_loader = self.interpreter._get_data_loader(io_examples)
         if isinstance(data_loader, list): 
             data_loader = data_loader[0]
@@ -71,12 +104,21 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
 
         # Convert to Torch Variables
         x = Variable(torch.from_numpy(x_np))
-        if torch.cuda.is_available(): 
+
+        # Move modules (new + lib) to the same device as x
+        use_cuda = torch.cuda.is_available()
+        moved_lib_modules = []
+        moved_new_modules = []
+        if use_cuda:
             x = x.cuda()
             for k, v in new_fns_dict.items():
                 v.cuda()
+                moved_new_modules.append(v)
+            for m in lib_modules:
+                m.cuda()
+                moved_lib_modules.append(m)
         
-        # 4. Run Forward Pass & Proxies
+        # 5. Run Forward Pass & Proxies
         global_vars = {"lib": self.lib}
         global_vars.update(new_fns_dict)
         program_str = repr_py(prog)
@@ -95,7 +137,13 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
                 activation_patterns.append(act.cpu().numpy())
 
             hooks = []
+            # Hooks for new modules
             for name, module in new_fns_dict.items():
+                for layer_name, layer in module.named_modules():
+                    if isinstance(layer, torch.nn.ReLU):
+                        hooks.append(layer.register_forward_hook(hook_fn))
+            # Hooks for library modules used
+            for module in lib_modules:
                 for layer_name, layer in module.named_modules():
                     if isinstance(layer, torch.nn.ReLU):
                         hooks.append(layer.register_forward_hook(hook_fn))
@@ -150,7 +198,7 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
                     trainability_score = 0.0
 
             # --- PROXY 3: COMPLEXITY ---
-            # Parameter count
+            # Parameter count (library + new modules)
             param_count = sum(p.numel() for p in trainable_params)
             # We might want to penalize too high complexity, or use it as tie breaker.
             # For AZ-NAS, they often maximize expressivity/trainability while constraining complexity.
@@ -180,13 +228,20 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # print(f"Proxy evaluation failed: {e}")
             # traceback.print_exc()
             return -1.0, 0
+        finally:
+            # Move library and new modules back to CPU if we moved them
+            if use_cuda:
+                for m in moved_new_modules:
+                    m.cpu()
+                for m in moved_lib_modules:
+                    m.cpu()
 
     def solve(self, io_examples_tr, io_examples_val, io_examples_test) -> List[Tuple[object, float]]:
         """
         Overrides the solve method to implement the harvest-rank-evaluate loop.
         """
         candidates = []
-        
+
         print(f"AZ-NAS: Gathering up to {self.settings.N} candidates...")
         
         # 1. HARVEST PHASE
@@ -229,10 +284,13 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
         
         # 3. RERANKING PHASE
         if NAS_EXPERIMENTAL_CONFIG.get("validity_check", False):
+            # Setup logging file (create with header if missing; do NOT delete per task)
+            log_file = "az_nas_validity_data.csv"
+            if not os.path.exists(log_file):
+                with open(log_file, "w") as f:
+                    f.write("az_nas_score,param_count,accuracy,program\n")
+
             # VALIDITY CHECK MODE: Randomly sample M candidates
-            import random
-            import os
-            
             # Filter out failed proxies if any (-1.0 score)
             valid_candidates = [c for c in candidates if c[0] != -1.0]
             
@@ -242,13 +300,6 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
                 top_candidates = valid_candidates
             
             print(f"AZ-NAS Validity Check: Randomly sampled {len(top_candidates)} candidates.")
-            
-            # Setup logging file
-            log_file = "az_nas_validity_data.csv"
-            write_header = not os.path.exists(log_file)
-            with open(log_file, "a") as f:
-                if write_header:
-                    f.write("az_nas_score,param_count,accuracy,program\n")
         else:
             # STANDARD MODE: Sort by NAS score (descending)
             candidates.sort(key=lambda x: x[0], reverse=True)

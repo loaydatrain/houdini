@@ -239,7 +239,7 @@ def main():
     num_tasks = 2 if seq_id == 0 else 3
 
     seq_settings = TaskSeqSettings(
-        update_library=True,
+        update_library=False,
         results_dir=settings["results_dir"],
     )
 
