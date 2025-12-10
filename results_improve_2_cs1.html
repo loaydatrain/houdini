@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body { font-family: sans-serif; margin: 20px; }
+    h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-top: 50px; }
+    h2 { color: #34495e; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .run-separator { border-top: 5px solid #2c3e50; margin: 60px 0; }
+</style>
+</head>
+<body>
+
+<h1 id="cs1_d0d1">cs1_d0d1_np_td</h1>
+
+<h2>Task 0: recognize_digit_0</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 1</div>
+<div>Time taken: 5.66 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9981 / 0.9995</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdr0_2, nn_fun_cs1_d0d1_np_tdr0_3)</td></tr>
+</table>
+<div>Time taken: 5.66 seconds</div>
+
+<h2>Task 1: recognize_digit_1</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 4</div>
+<div>Time taken: 7.27 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9971 / 0.9967</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdr1_2, nn_fun_cs1_d0d1_np_tdr1_3)</td></tr>
+</table>
+<div>Time taken: 7.27 seconds</div>
+
+<h2>Task 2: count_digit_occ_0s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 36</div>
+<div>Time taken: 344.92 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.2904 / -0.2816</td><td>lib.compose(lib.compose(nn_fun_cs1_d0d1_np_tdc0_5420, lib.map_l(nn_fun_cs1_d0d1_np_tdc0_5421)), lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr1_3))</td></tr>
+<tr><td>-0.2983 / -0.2944</td><td>lib.compose(lib.compose(nn_fun_cs1_d0d1_np_tdc0_5394, lib.map_l(nn_fun_cs1_d0d1_np_tdc0_5395)), lib.map_l(nn_fun_cs1_d0d1_np_tdc0_5396))</td></tr>
+<tr><td>-0.3114 / -0.3050</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc0_5190, lib.compose(lib.map_l(nn_fun_cs1_d0d1_np_tdc0_5191), lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr0_3)))</td></tr>
+<tr><td>-0.3097 / -0.3130</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc0_596, lib.map_l(lib.compose(nn_fun_cs1_d0d1_np_tdc0_597, lib.nn_fun_cs1_d0d1_np_tdr0_3)))</td></tr>
+</table>
+<div>Time taken: 344.92 seconds</div>
+
+<h2>Task 3: count_digit_occ_1s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 50</div>
+<div>Time taken: 393.58 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.2703 / -0.2747</td><td>lib.compose(lib.nn_fun_cs1_d0d1_np_tdc0_5420, lib.map_l(lib.compose(lib.nn_fun_cs1_d0d1_np_tdr1_2, lib.nn_fun_cs1_d0d1_np_tdr1_3)))</td></tr>
+<tr><td>-0.2946 / -0.2812</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc1_6433, lib.compose(lib.map_l(nn_fun_cs1_d0d1_np_tdc1_6434), lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr1_3)))</td></tr>
+<tr><td>-0.2821 / -0.2848</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc1_681, lib.map_l(lib.compose(nn_fun_cs1_d0d1_np_tdc1_682, lib.nn_fun_cs1_d0d1_np_tdr1_3)))</td></tr>
+<tr><td>-0.2855 / -0.2852</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc1_6427, lib.compose(lib.map_l(nn_fun_cs1_d0d1_np_tdc1_6428), lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr0_3)))</td></tr>
+<tr><td>-0.2828 / -0.2869</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc1_6549, lib.compose(lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr1_2), lib.map_l(lib.nn_fun_cs1_d0d1_np_tdr1_3)))</td></tr>
+<tr><td>-0.2957 / -0.2963</td><td>lib.compose(nn_fun_cs1_d0d1_np_tdc1_655, lib.map_l(lib.compose(nn_fun_cs1_d0d1_np_tdc1_656, nn_fun_cs1_d0d1_np_tdc1_657)))</td></tr>
+</table>
+<div>Time taken: 393.58 seconds</div>
+
+<hr class="run-separator">
+
+<h1 id="cs1_d2d9">cs1_d2d9_np_td</h1>
+
+<h2>Task 0: recognize_digit_2</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 1</div>
+<div>Time taken: 4.74 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9914 / 0.9914</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdr2_2, nn_fun_cs1_d2d9_np_tdr2_3)</td></tr>
+</table>
+<div>Time taken: 4.74 seconds</div>
+
+<h2>Task 1: recognize_digit_9</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 4</div>
+<div>Time taken: 7.14 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9900 / 0.9929</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdr9_8, lib.nn_fun_cs1_d2d9_np_tdr2_3)</td></tr>
+</table>
+<div>Time taken: 7.14 seconds</div>
+
+<h2>Task 2: count_digit_occ_2s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 24</div>
+<div>Time taken: 226.62 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.2971 / -0.3108</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc2_549, lib.map_l(lib.compose(nn_fun_cs1_d2d9_np_tdc2_550, nn_fun_cs1_d2d9_np_tdc2_551)))</td></tr>
+<tr><td>-0.3029 / -0.3180</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc2_4916, lib.compose(lib.map_l(nn_fun_cs1_d2d9_np_tdc2_4917), lib.map_l(lib.nn_fun_cs1_d2d9_np_tdr2_3)))</td></tr>
+<tr><td>-0.3368 / -0.3499</td><td>lib.compose(lib.compose(nn_fun_cs1_d2d9_np_tdc2_5102, lib.map_l(nn_fun_cs1_d2d9_np_tdc2_5103)), lib.map_l(nn_fun_cs1_d2d9_np_tdc2_5104))</td></tr>
+</table>
+<div>Time taken: 226.62 seconds</div>
+
+<h2>Task 3: count_digit_occ_9s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 50</div>
+<div>Time taken: 381.72 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3718 / -0.3771</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc9_6433, lib.compose(lib.map_l(nn_fun_cs1_d2d9_np_tdc9_6434), lib.map_l(lib.nn_fun_cs1_d2d9_np_tdc2_551)))</td></tr>
+<tr><td>-0.3858 / -0.3831</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc9_681, lib.map_l(lib.compose(nn_fun_cs1_d2d9_np_tdc9_682, lib.nn_fun_cs1_d2d9_np_tdc2_551)))</td></tr>
+<tr><td>-0.3721 / -0.3831</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc9_675, lib.map_l(lib.compose(nn_fun_cs1_d2d9_np_tdc9_676, lib.nn_fun_cs1_d2d9_np_tdr2_3)))</td></tr>
+<tr><td>-0.3747 / -0.3858</td><td>lib.compose(lib.nn_fun_cs1_d2d9_np_tdc2_549, lib.map_l(lib.compose(lib.nn_fun_cs1_d2d9_np_tdr9_8, lib.nn_fun_cs1_d2d9_np_tdr2_3)))</td></tr>
+<tr><td>-0.3747 / -0.3858</td><td>lib.compose(lib.nn_fun_cs1_d2d9_np_tdc2_549, lib.compose(lib.map_l(lib.nn_fun_cs1_d2d9_np_tdr9_8), lib.map_l(lib.nn_fun_cs1_d2d9_np_tdr2_3)))</td></tr>
+<tr><td>-0.3797 / -0.3935</td><td>lib.compose(nn_fun_cs1_d2d9_np_tdc9_6407, lib.compose(lib.map_l(nn_fun_cs1_d2d9_np_tdc9_6408), lib.map_l(nn_fun_cs1_d2d9_np_tdc9_6409)))</td></tr>
+</table>
+<div>Time taken: 381.72 seconds</div>
+
+<hr class="run-separator">
+
+<h1 id="cs1_d3d4">cs1_d3d4_np_td</h1>
+
+<h2>Task 0: recognize_digit_3</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 1</div>
+<div>Time taken: 4.67 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9938 / 0.9952</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdr3_2, nn_fun_cs1_d3d4_np_tdr3_3)</td></tr>
+</table>
+<div>Time taken: 4.67 seconds</div>
+
+<h2>Task 1: recognize_digit_4</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 4</div>
+<div>Time taken: 7.06 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9924 / 0.9924</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdr4_8, lib.nn_fun_cs1_d3d4_np_tdr3_3)</td></tr>
+</table>
+<div>Time taken: 7.06 seconds</div>
+
+<h2>Task 2: count_digit_occ_3s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 24</div>
+<div>Time taken: 227.02 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3139 / -0.3168</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdc3_569, lib.map_l(lib.compose(nn_fun_cs1_d3d4_np_tdc3_570, lib.nn_fun_cs1_d3d4_np_tdr3_3)))</td></tr>
+<tr><td>-0.6516 / -0.6593</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdc3_571, lib.map_l(lib.compose(nn_fun_cs1_d3d4_np_tdc3_572, lib.nn_fun_cs1_d3d4_np_tdr3_3)))</td></tr>
+<tr><td>-0.6564 / -0.6623</td><td>lib.compose(lib.compose(nn_fun_cs1_d3d4_np_tdc3_5124, lib.map_l(nn_fun_cs1_d3d4_np_tdc3_5125)), lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr3_3))</td></tr>
+</table>
+<div>Time taken: 227.02 seconds</div>
+
+<h2>Task 3: count_digit_occ_4s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 50</div>
+<div>Time taken: 390.10 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3092 / -0.3324</td><td>lib.compose(lib.compose(nn_fun_cs1_d3d4_np_tdc4_6348, lib.map_l(nn_fun_cs1_d3d4_np_tdc4_6349)), lib.map_l(nn_fun_cs1_d3d4_np_tdc4_6350))</td></tr>
+<tr><td>-0.3250 / -0.3469</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdc4_6231, lib.compose(lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr4_8), lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr3_3)))</td></tr>
+<tr><td>-0.3297 / -0.3535</td><td>lib.compose(nn_fun_cs1_d3d4_np_tdc4_6097, lib.compose(lib.map_l(nn_fun_cs1_d3d4_np_tdc4_6098), lib.map_l(nn_fun_cs1_d3d4_np_tdc4_6099)))</td></tr>
+<tr><td>-0.3365 / -0.3580</td><td>lib.compose(lib.compose(nn_fun_cs1_d3d4_np_tdc4_6482, lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr4_8)), lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr3_3))</td></tr>
+<tr><td>-0.3370 / -0.3595</td><td>lib.compose(lib.nn_fun_cs1_d3d4_np_tdc3_569, lib.map_l(lib.compose(lib.nn_fun_cs1_d3d4_np_tdr4_8, lib.nn_fun_cs1_d3d4_np_tdr3_3)))</td></tr>
+<tr><td>-0.3370 / -0.3595</td><td>lib.compose(lib.nn_fun_cs1_d3d4_np_tdc3_569, lib.compose(lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr4_8), lib.map_l(lib.nn_fun_cs1_d3d4_np_tdr3_3)))</td></tr>
+</table>
+<div>Time taken: 390.10 seconds</div>
+
+<hr class="run-separator">
+
+<h1 id="cs1_d5d7">cs1_d5d7_np_td</h1>
+
+<h2>Task 0: recognize_digit_5</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 1</div>
+<div>Time taken: 4.71 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9919 / 0.9957</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdr5_2, nn_fun_cs1_d5d7_np_tdr5_3)</td></tr>
+</table>
+<div>Time taken: 4.71 seconds</div>
+
+<h2>Task 1: recognize_digit_7</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 4</div>
+<div>Time taken: 7.11 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9900 / 0.9962</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdr7_2, nn_fun_cs1_d5d7_np_tdr7_3)</td></tr>
+</table>
+<div>Time taken: 7.11 seconds</div>
+
+<h2>Task 2: count_digit_occ_5s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 36</div>
+<div>Time taken: 343.14 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3234 / -0.3193</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc5_602, lib.map_l(lib.compose(nn_fun_cs1_d5d7_np_tdc5_603, lib.nn_fun_cs1_d5d7_np_tdr7_3)))</td></tr>
+<tr><td>-0.3304 / -0.3433</td><td>lib.compose(lib.compose(nn_fun_cs1_d5d7_np_tdc5_5525, lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr5_2)), lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr5_3))</td></tr>
+<tr><td>-0.3476 / -0.3461</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc5_5190, lib.compose(lib.map_l(nn_fun_cs1_d5d7_np_tdc5_5191), lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr5_3)))</td></tr>
+<tr><td>-0.3557 / -0.3553</td><td>lib.compose(lib.compose(nn_fun_cs1_d5d7_np_tdc5_5420, lib.map_l(nn_fun_cs1_d5d7_np_tdc5_5421)), lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr7_3))</td></tr>
+</table>
+<div>Time taken: 343.14 seconds</div>
+
+<h2>Task 3: count_digit_occ_7s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 50</div>
+<div>Time taken: 436.89 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3552 / -0.3377</td><td>lib.compose(lib.nn_fun_cs1_d5d7_np_tdc5_602, lib.map_l(lib.compose(lib.nn_fun_cs1_d5d7_np_tdr7_2, lib.nn_fun_cs1_d5d7_np_tdr7_3)))</td></tr>
+<tr><td>-0.3632 / -0.3610</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc7_6407, lib.compose(lib.map_l(nn_fun_cs1_d5d7_np_tdc7_6408), lib.map_l(nn_fun_cs1_d5d7_np_tdc7_6409)))</td></tr>
+<tr><td>-0.3712 / -0.3679</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc7_675, lib.map_l(lib.compose(nn_fun_cs1_d5d7_np_tdc7_676, lib.nn_fun_cs1_d5d7_np_tdr5_3)))</td></tr>
+<tr><td>-0.3747 / -0.3751</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc7_6546, lib.compose(lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr7_2), lib.map_l(nn_fun_cs1_d5d7_np_tdc7_6547)))</td></tr>
+<tr><td>-0.4007 / -0.3890</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc7_6427, lib.compose(lib.map_l(nn_fun_cs1_d5d7_np_tdc7_6428), lib.map_l(lib.nn_fun_cs1_d5d7_np_tdr5_3)))</td></tr>
+<tr><td>-0.4068 / -0.3903</td><td>lib.compose(nn_fun_cs1_d5d7_np_tdc7_730, lib.map_l(lib.compose(lib.nn_fun_cs1_d5d7_np_tdr7_2, lib.nn_fun_cs1_d5d7_np_tdr7_3)))</td></tr>
+</table>
+<div>Time taken: 436.89 seconds</div>
+
+<hr class="run-separator">
+
+<h1 id="cs1_d6d8">cs1_d6d8_np_td</h1>
+
+<h2>Task 0: recognize_digit_6</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 1</div>
+<div>Time taken: 60.04 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9933 / 0.9962</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdr6_2, nn_fun_cs1_d6d8_np_tdr6_3)</td></tr>
+</table>
+<div>Time taken: 60.04 seconds</div>
+
+<h2>Task 1: recognize_digit_8</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 4</div>
+<div>Time taken: 59.00 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>0.9924 / 0.9929</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdr8_8, lib.nn_fun_cs1_d6d8_np_tdr6_3)</td></tr>
+</table>
+<div>Time taken: 59.00 seconds</div>
+
+<h2>Task 2: count_digit_occ_6s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 24</div>
+<div>Time taken: 227.55 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3075 / -0.2896</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdc6_569, lib.map_l(lib.compose(nn_fun_cs1_d6d8_np_tdc6_570, lib.nn_fun_cs1_d6d8_np_tdr6_3)))</td></tr>
+<tr><td>-0.2997 / -0.3009</td><td>lib.compose(lib.compose(nn_fun_cs1_d6d8_np_tdc6_5227, lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr6_2)), lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr6_3))</td></tr>
+<tr><td>-0.3482 / -0.3259</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdc6_549, lib.map_l(lib.compose(nn_fun_cs1_d6d8_np_tdc6_550, nn_fun_cs1_d6d8_np_tdc6_551)))</td></tr>
+</table>
+<div>Time taken: 227.55 seconds</div>
+
+<h2>Task 3: count_digit_occ_8s</h2>
+<div></div>
+<br><div>Training Data Used: 100 %</div>
+<div>Number of programs evaluated: 50</div>
+<div>Time taken: 388.37 seconds</div>
+<table border="1">
+<tr><th>Score Test / Val</th><th>Top 50 Programs</th></tr>
+<tr><td>-0.3084 / -0.3350</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdc8_6097, lib.compose(lib.map_l(nn_fun_cs1_d6d8_np_tdc8_6098), lib.map_l(nn_fun_cs1_d6d8_np_tdc8_6099)))</td></tr>
+<tr><td>-0.3352 / -0.3670</td><td>lib.compose(lib.compose(nn_fun_cs1_d6d8_np_tdc8_6348, lib.map_l(nn_fun_cs1_d6d8_np_tdc8_6349)), lib.map_l(nn_fun_cs1_d6d8_np_tdc8_6350))</td></tr>
+<tr><td>-0.3309 / -0.3764</td><td>lib.compose(lib.nn_fun_cs1_d6d8_np_tdc6_569, lib.compose(lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr8_8), lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr6_3)))</td></tr>
+<tr><td>-0.3309 / -0.3764</td><td>lib.compose(lib.nn_fun_cs1_d6d8_np_tdc6_569, lib.map_l(lib.compose(lib.nn_fun_cs1_d6d8_np_tdr8_8, lib.nn_fun_cs1_d6d8_np_tdr6_3)))</td></tr>
+<tr><td>-0.3457 / -0.3826</td><td>lib.compose(lib.compose(nn_fun_cs1_d6d8_np_tdc8_6368, lib.map_l(nn_fun_cs1_d6d8_np_tdc8_6369)), lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr6_3))</td></tr>
+<tr><td>-0.3271 / -0.3838</td><td>lib.compose(nn_fun_cs1_d6d8_np_tdc8_6231, lib.compose(lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr8_8), lib.map_l(lib.nn_fun_cs1_d6d8_np_tdr6_3)))</td></tr>
+</table>
+<div>Time taken: 388.37 seconds</div>
+
+</body>
+</html>
