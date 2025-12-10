@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 from typing import NamedTuple, List, Dict
 
 from HOUDINI.Eval.EvaluatorUtils import mk_tag, write_to_file, append_to_file
@@ -115,16 +116,43 @@ class TaskSeq:
     def append_to_the_report(self, task_id, task_result):
         seq_dir = self.get_seq_dir()
         report_file_path = seq_dir + '/' + self.name() + '.html'
+        json_file_path = seq_dir + '/' + self.name() + '.json'
 
         if task_id == 0:
             header = mk_tag('h1', self.name())
             write_to_file(report_file_path, header)
+            # Initialize JSON results structure
+            # write_to_file(json_file_path, '{}')
 
         task = self.tasks[task_id]
 
         task_result.save_plot(task, seq_dir)
         report = task_result.gen_report(task, task_id)
         append_to_file(report_file_path, report)
+
+        # # Update JSON file with task results including timing
+        # self._update_json_results(json_file_path, task_id, task, task_result)
+
+    # def _update_json_results(self, json_file_path, task_id, task, task_result):
+    #     """Update JSON results file with task results including timing."""
+    #     # Load existing results
+    #     try:
+    #         with open(json_file_path, 'r') as fh:
+    #             all_results = json.load(fh)
+    #     except (json.JSONDecodeError, FileNotFoundError):
+    #         all_results = {}
+
+    #     # Add current task results
+    #     task_data = {
+    #         'task_name': task.name(),
+    #         'task_id': task_id,
+    #         'results': task_result.get_raw_data()
+    #     }
+    #     all_results[task.name()] = task_data
+
+    #     # Write updated results
+    #     with open(json_file_path, 'w') as fh:
+    #         json.dump(all_results, fh, indent=2)
 
     """"""
     def write_report(self, task_id):

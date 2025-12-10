@@ -70,6 +70,10 @@ class TaskResultSingle:
 
         res = mk_tag('table', table_content, attribs={'border': '1'})
 
+        # Add timing information
+        if self.time is not None:
+            res += mk_div('Time taken: %.2f seconds' % self.time)
+
         def gen_prog_content():
             genReprs = []
 
@@ -134,6 +138,8 @@ class TaskResult:
             res += '<br>'
             res += mk_div('Training Data Used: %s %%' % percentage)
             res += mk_div('Number of programs evaluated: %s' % task_result_single.num_programs)
+            if task_result_single.time is not None:
+                res += mk_div('Time taken: %.2f seconds' % task_result_single.time)
             res += task_result_single.gen_report(task)
         return res
 
@@ -279,7 +285,7 @@ class Task:
 
                 c_res.top_k_solutions_results = nsynth_res.top_k_solutions_results
                 c_res.num_programs = len(nsynth.prog_unkinfo_tuples)
-                c_res.time = None  # TODO: implement
+                # Time will be set after run completion
 
                 if isinstance(nsynth_res, NeuralSynthesizerEAResult):
                     c_res.num_programs = nsynth_res.numProgsEvaluated
@@ -301,9 +307,10 @@ class Task:
                         print(a.dprog)
                 raise
 
+            rEnd = time.time()
+            c_res.time = rEnd - rStart  # Time in seconds
             res.results.append(c_res)
             print("END_RUN %d, Time: %s" % (i, getElapsedTime()))
-            rEnd = time.time()
             print("TIME_TAKEN_RUN, %s" % formatTime(rEnd - rStart))
 
         print("END_TASK, Time: %s" % getElapsedTime())
