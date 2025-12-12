@@ -416,7 +416,7 @@ def _get_unknown_fns_definitions(unkSortMap, is_graph=False):
         if is_graph:
             output_activation = None
         elif type(fn_output_sort) == PPTensorSort and fn_output_sort.shape.__len__() == 2:
-            # print(fn_output_sort)
+            # print(fn_output_sort) Is this leaking output to the terminal?
 
             if type(output_type) == PPReal or type(output_type) == PPInt:
                 output_activation = None

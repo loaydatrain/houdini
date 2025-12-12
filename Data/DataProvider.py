@@ -560,6 +560,7 @@ class DataProvider(object):
             for c_download_url in urls:
                 c_archive_filename = os.path.basename(c_download_url)
                 c_archive_filepath = "{}/{}".format(directory, c_archive_filename)
+                print(c_archive_filepath)
 
                 if not os.path.exists(c_archive_filepath):
                     print("Downloading {}".format(c_archive_filename))

@@ -167,7 +167,7 @@ def get_task_settings(dbg_mode, dbg_learn_parameters, synthesizer=None):
             K=50,
             epochs=30,
             synthesizer=synthesizer,
-            dbg_learn_parameters=dbg_learn_parameters
+            dbg_learn_parameters=dbg_learn_parameters,
         )
     else:
         task_settings = TaskSettings(
@@ -179,7 +179,7 @@ def get_task_settings(dbg_mode, dbg_learn_parameters, synthesizer=None):
             K=2,
             epochs=1,
             synthesizer=synthesizer,
-            dbg_learn_parameters=dbg_learn_parameters
+            dbg_learn_parameters=dbg_learn_parameters,
         )
     return task_settings
 
@@ -192,7 +192,7 @@ def mk_default_lib():
 
 def main(task_id, sequence_str, sequence_name, synthesizer):
     seq_settings = TaskSeqSettings(
-        update_library=True,
+        update_library=False,
         results_dir=settings["results_dir"],
     )
     task_settings = get_task_settings(settings["dbg_mode"], settings["dbg_learn_parameters"], synthesizer=synthesizer)
@@ -211,7 +211,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--synthesizer',
-                        choices=['enumerative', 'evolutionary'],
+                        choices=['enumerative', 'evolutionary', 'nas'],
                         default='enumerative',
                         help='Synthesizer type. (default: %(default)s)')
     parser.add_argument('--taskseq',
@@ -246,14 +246,21 @@ if __name__ == '__main__':
         "results_dir": "Results",  # str(sys.argv[1])
         "dbg_learn_parameters": True,  # If False, the interpreter doesn't learn the new parameters
         "dbg_mode": args.dbg,  # If True, the sequences run for a tiny amount of data
-        "synthesizer": args.synthesizer,  # enumerative, evolutionary
-        "seq_string": args.taskseq  # "ls"  # cs1, cs2, cs3, ls
+        "synthesizer": args.synthesizer,  # enumerative, evolutionary, nas
+        "seq_string": args.taskseq,  # "ls"  # cs1, cs2, cs3, ls
     }
 
     seq_info_dict = get_sequence_info(settings["seq_string"])
 
     # num_tasks = seq_info_dict["num_tasks"]
-    additional_prefix = "_np_{}".format("td" if settings["synthesizer"] == "enumerative" else "ea")
+    if settings["synthesizer"] == "enumerative":
+        suffix = "td"
+    elif settings["synthesizer"] == "evolutionary":
+        suffix = "ea"
+    else:
+        suffix = settings["synthesizer"] # "nas"
+    additional_prefix = "_np_{}".format(suffix)
+
     prefixes = ["{}{}".format(prefix, additional_prefix) for prefix in seq_info_dict["prefixes"]]
 
     for sequence_idx, sequence in enumerate(seq_info_dict["sequences"]):
