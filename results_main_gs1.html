@@ -1,0 +1,68 @@
+eq_1 main</h1>
+<h2  >Task 0: regress_street</h2>
+<div  ><img  src="regress_street.png"></img>
+</div>
+<br><div  >Training Data Used: 100 %</div>
+<div  >Number of programs evaluated: 1</div>
+<div  >Time taken: 1.46 seconds</div>
+<table  border="1"><tr  ><th  >Score Test / Val</th>
+		<th  >Top 10 Programs</th>
+	</tr>
+
+		<tr  ><td  >-46.1134 / -46.1355</td>
+			<td  >lib.compose(nn_fun_gs1regstreet_2, nn_fun_gs1regstreet_3)</td>
+		</tr>
+</table>
+<div  >Time taken: 1.46 seconds</div>
+<h2  >Task 1: navigate_street</h2>
+<div  ><img  src="navigate_street.png"></img>
+</div>
+<br><div  >Training Data Used: 100 %</div>
+<div  >Number of programs evaluated: 60</div>
+<div  >Time taken: 121.27 seconds</div>
+<table  border="1"><tr  ><th  >Score Test / Val</th>
+		<th  >Top 10 Programs</th>
+	</tr>
+
+		<tr  ><td  >-15.9290 / -16.0255</td>
+			<td  >lib.compose(lib.map_g(lib.nn_fun_gs1regstreet_2), lib.map_g(nn_fun_gs1navstreet_324))</td>
+		</tr>
+
+			<tr  ><td  >-16.8636 / -16.9635</td>
+				<td  >lib.map_g(lib.compose(lib.nn_fun_gs1regstreet_2, nn_fun_gs1navstreet_39))</td>
+			</tr>
+
+				<tr  ><td  >-18.5954 / -18.6502</td>
+					<td  >lib.compose(lib.repeat(10, lib.conv_g(nn_fun_gs1navstreet_561147)), lib.compose(lib.map_g(nn_fun_gs1navstreet_561148), lib.map_g(nn_fun_gs1navstreet_561149)))</td>
+				</tr>
+
+					<tr  ><td  >-18.5960 / -18.6509</td>
+						<td  >lib.compose(lib.repeat(9, lib.conv_g(nn_fun_gs1navstreet_101577)), lib.map_g(lib.compose(nn_fun_gs1navstreet_101578, nn_fun_gs1navstreet_101579)))</td>
+					</tr>
+
+						<tr  ><td  >-18.6136 / -18.6684</td>
+							<td  >lib.compose(lib.repeat(9, lib.conv_g(nn_fun_gs1navstreet_101590)), lib.map_g(lib.compose(lib.nn_fun_gs1regstreet_2, lib.nn_fun_gs1regstreet_3)))</td>
+						</tr>
+
+							<tr  ><td  >-18.6181 / -18.6731</td>
+								<td  >lib.compose(lib.conv_g(nn_fun_gs1navstreet_5717), lib.map_g(lib.compose(lib.nn_fun_gs1regstreet_2, nn_fun_gs1navstreet_5718)))</td>
+							</tr>
+
+								<tr  ><td  >-18.6262 / -18.6811</td>
+									<td  >lib.compose(lib.conv_g(nn_fun_gs1navstreet_5666), lib.map_g(lib.compose(nn_fun_gs1navstreet_5667, nn_fun_gs1navstreet_5668)))</td>
+								</tr>
+
+									<tr  ><td  >-18.6278 / -18.6826</td>
+										<td  >lib.compose(lib.conv_g(nn_fun_gs1navstreet_29036), lib.compose(lib.map_g(lib.nn_fun_gs1regstreet_2), lib.map_g(lib.nn_fun_gs1regstreet_3)))</td>
+									</tr>
+
+										<tr  ><td  >-18.6329 / -18.6878</td>
+											<td  >lib.compose(lib.compose(lib.repeat(9, lib.conv_g(nn_fun_gs1navstreet_576140)), lib.map_g(nn_fun_gs1navstreet_576141)), lib.map_g(nn_fun_gs1navstreet_576142))</td>
+										</tr>
+
+											<tr  ><td  >-18.6344 / -18.6892</td>
+												<td  >lib.compose(lib.compose(lib.repeat(9, lib.conv_g(nn_fun_gs1navstreet_576155)), lib.map_g(lib.nn_fun_gs1regstreet_2)), lib.map_g(lib.nn_fun_gs1regstreet_3))</td>
+											</tr>
+</table>
+<div  >Time taken: 121.27 seconds</div>
+

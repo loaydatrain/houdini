@@ -249,14 +249,29 @@ class Task:
 
         # LOAY CHANGING THE SCHEDULING HERE AFTER GENERATION
         num_candidates = len(nsynth.prog_unkinfo_tuples)
-        fallback_schedule = [
-            {"train_fraction": 0.1, "epochs": max(1, self.settings.epochs // 5),
-            "max_candidates": max(1, num_candidates// 2)},
-            {"train_fraction": 0.4, "epochs": max(1, self.settings.epochs // 2),
-            "max_candidates": max(1,num_candidates // 4)},
-            {"train_fraction": 1.0, "epochs": self.settings.epochs,
-            "max_candidates": max(1,num_candidates // 8)},
-        ]
+        
+        # Skip progressive schedule if fewer than 4 programs - just train all to completion
+        if num_candidates < 4:
+            fallback_schedule = [
+                {"train_fraction": 1.0, "epochs": self.settings.epochs,
+                 "max_candidates": num_candidates},
+            ]
+            print(f"Skipping progressive schedule for {num_candidates} programs (< 4)")
+        else:
+            # fallback_schedule = [
+            #     {"train_fraction": 0.1, "epochs": max(1, self.settings.epochs // 5),
+            #     "max_candidates": max(1, num_candidates// 2)},
+            #     {"train_fraction": 0.4, "epochs": max(1, self.settings.epochs // 2),
+            #     "max_candidates": max(1,num_candidates // 4)},
+            #     {"train_fraction": 1.0, "epochs": self.settings.epochs,
+            #     "max_candidates": max(1,num_candidates // 8)},
+            # ]
+            fallback_schedule = [
+                {"train_fraction": 0.3, "epochs": max(1, self.settings.epochs // 2),
+                "max_candidates": max(1,num_candidates // 4)},
+                {"train_fraction": 1.0, "epochs": self.settings.epochs,
+                "max_candidates": max(1,num_candidates // 8)},
+            ]
         print("original schedule:",nsynth.progressive_schedule)
         nsynth.progressive_schedule = nsynth._normalize_progressive_schedule(fallback_schedule)
         print(f"new schedule for {len(nsynth.prog_unkinfo_tuples)} programs:",nsynth.progressive_schedule)
