@@ -369,7 +369,7 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # In the HOUDINI Regime, the az_nas score is inversely correlated with performance
             # So we invert the score
             score = score * -1.0
-
+            
             metrics = {
                 "expressivity": float(expressivity_score),
                 "progressivity": float(progressivity_score),
@@ -389,14 +389,13 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # Uncomment for debugging:
             # print(f"Proxy evaluation failed: {e}")
             # traceback.print_exc()
-
             return -42.0, 0, metrics
-        finally:
-            if use_cuda:
-                for m in moved_new_modules:
-                    m.cpu()
-                for m in moved_lib_modules:
-                    m.cpu()
+        # finally:
+        #     if use_cuda:
+        #         for m in moved_new_modules:
+        #             m.cpu()
+        #         for m in moved_lib_modules:
+        #             m.cpu()
 
     def solve(self, io_examples_tr, io_examples_val, io_examples_test) -> List[Tuple[object, float]]:
         """
@@ -421,6 +420,7 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
                  continue
                  
              if is_ok:
+                #  import pdb; pdb.set_trace()
                  # 2. PROXY PHASE
                  nas_score, param_count, nas_metrics = self.compute_az_nas_score(prog, unkSortMap, io_examples_tr)
                  candidates.append((nas_score, param_count, nas_metrics, prog, unkSortMap))
@@ -466,13 +466,14 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # STANDARD MODE: Sort by NAS score (descending)
             candidates.sort(key=lambda x: x[0], reverse=True)
             
-            # Select top half of candidates with a minimum of 1 candidate
+            # Select top M
             top_candidates = candidates[:max(1, len(candidates)//2)]
             print(f"AZ-NAS: Selected top {len(top_candidates)} for full evaluation.")
 
         # Populate the prog_unkinfo_tuples for compatibility if needed by other methods 
         # (like log methods or future progressive tuning)
         self.prog_unkinfo_tuples = [(p, u) for _, _, _, p, u in top_candidates]
+        print("len(self.prog_unkinfo_tuples)", len(self.prog_unkinfo_tuples))
 
         # 4. EVALUATION PHASE
         top_k_solutions_results = []
