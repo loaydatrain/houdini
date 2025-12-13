@@ -18,7 +18,7 @@ from HOUDINI.Synthesizer.MiscUtils import getElapsedTime, formatTime
 
 # EXPERIMENTAL CONFIG
 NAS_EXPERIMENTAL_CONFIG = {
-    "validity_check": True,  # Set to True to enable AZ-NAS validity check (random sampling, no pruning, logging)
+    "validity_check": False,  # Set to True to enable AZ-NAS validity check (random sampling, no pruning, logging)
     
     # Weights for combining AZ-NAS proxy scores
     # Final score = w_expr * norm_expr + w_prog * norm_prog + w_train * norm_train
@@ -365,7 +365,11 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             w_prog = NAS_EXPERIMENTAL_CONFIG.get("weight_progressivity", 1.0)
             w_train = NAS_EXPERIMENTAL_CONFIG.get("weight_trainability", 1.0)
             score = w_expr * norm_expr + w_prog * norm_prog + w_train * norm_train
-            
+
+            # In the HOUDINI Regime, the az_nas score is inversely correlated with performance
+            # So we invert the score
+            score = score * -1.0
+
             metrics = {
                 "expressivity": float(expressivity_score),
                 "progressivity": float(progressivity_score),
@@ -385,7 +389,8 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # Uncomment for debugging:
             # print(f"Proxy evaluation failed: {e}")
             # traceback.print_exc()
-            return -1.0, 0, metrics
+
+            return -42.0, 0, metrics
         finally:
             if use_cuda:
                 for m in moved_new_modules:
@@ -461,8 +466,8 @@ class NeuralSynthesizerNAS(NeuralSynthesizer):
             # STANDARD MODE: Sort by NAS score (descending)
             candidates.sort(key=lambda x: x[0], reverse=True)
             
-            # Select top M
-            top_candidates = candidates[:self.settings.M]
+            # Select top half of candidates with a minimum of 1 candidate
+            top_candidates = candidates[:max(1, len(candidates)//2)]
             print(f"AZ-NAS: Selected top {len(top_candidates)} for full evaluation.")
 
         # Populate the prog_unkinfo_tuples for compatibility if needed by other methods 

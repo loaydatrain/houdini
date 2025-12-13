@@ -192,7 +192,7 @@ def mk_default_lib():
 
 def main(task_id, sequence_str, sequence_name, synthesizer):
     seq_settings = TaskSeqSettings(
-        update_library=False,
+        update_library=True,
         results_dir=settings["results_dir"],
     )
     task_settings = get_task_settings(settings["dbg_mode"], settings["dbg_learn_parameters"], synthesizer=synthesizer)
